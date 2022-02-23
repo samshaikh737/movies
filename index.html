@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Movie-App-Jquery</title>
+    <link rel="stylesheet" href="./style.css" />
+    <link
+      rel="stylesheet"
+      href="https://bootswatch.com/4/cyborg/bootstrap.min.css"
+    />
+  </head>
+  <body>
+    <style>
+      img {
+        width: 225px;
+        height: 300px;
+      }
+
+      @media only screen and (max-width: 724px) {
+        img {
+          width: 210px;
+          height: 300px;
+        }
+      }
+    </style>
+
+    <div class="container mt-5">
+        <h3 class="text-center">Search For Any Movies</h3>
+        <form id="searchForm">
+          <input
+            type="text"
+            class="form-control"
+            id="searchText"
+            placeholder="Search  Movies"
+          />
+        </form>
+    </div>
+
+    <div class="container mt-5">
+      <div class="row" class="movie_Row" id="movie_Row">
+      </div>
+    </div>
+
+    <div
+    id="container"
+    class="alert alert-primary mx-auto"
+    role="alert"
+    style="
+      background-color: red;
+      font-weight: bolder;
+      width: fit-content;
+      display: none;
+      margin: auto;
+    "
+  ></div>
+
+    <div id="loader" class="container" style="display: none;align-items: center;justify-content: center">
+      <div class="spinner-border" role="status" style="width: 5rem;height: 5rem;">
+        <span class="sr-only">Loading...</span>
+      </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <script src="/script_1.js"></script>
+
+    <script>
+        const loader = document.querySelector("#loader");
+        function handleLoader(show) {
+            if(show) return loader.style.display = "flex";
+            loader.style.display = "none";
+        }
+
+      const showError = (errMessage, containerID, status) => {
+        let contain = document.getElementById(containerID);
+        contain.innerHTML = errMessage;
+        if (!status) {
+          return (contain.style.display = "none");
+        }
+        contain.style.display = "block";
+      };
+
+      $(document).ready(function () {
+        $("#searchForm").on("submit", (e) => {
+          showError(null, "container");
+
+          let searchText = $("#searchText").val();
+          getMovies(searchText);
+          e.preventDefault();
+        });
+      });
+
+      let api_Key = "eO8eO3d8";
+
+      const movieBody = (data) => {
+        return `
+            <div class="col-sm-12 col-md-4 col-lg-3 text-center movie_container " >
+                <img src="${data?.Poster}" alt="" class="img-fluid" style="height:300px;">
+                <br>
+                 <a href='https://www.imdb.com/title/${data?.imdbID}/?ref_=fn_al_tt_1' class="btn btn-primary mt-3 mb-2" target="_blank"> ${data?.Title} </a>
+            </div><br>
+        `;
+      };
+
+     async function getMovies(searchText) {
+        handleLoader(true)
+        await fetch("http://www.omdbapi.com/?s=" + searchText + "&apikey=e08e03d8")
+          .then((response) => {
+            return response.json();
+          })
+          .then((show) => {
+            console.log(show);
+            if (show?.Response === "False") {
+              showError(show.Error, "container", true);
+            }
+            let movie_Row = document.getElementById("movie_Row");
+            let allMovies = "";
+            allMovies += `<h3 class="text-center w-100">Total: ${show?.Search.length}</h3>`;
+
+            show?.Search?.map((movie) => {
+              allMovies += movieBody(movie);
+            });
+            movie_Row.innerHTML = allMovies;
+          })
+          .catch((error) => {
+            console.log("erorr :  " + error);
+          });
+
+        handleLoader(false)
+      }
+    </script>
+  </body>
+</html>
